@@ -17,8 +17,8 @@ def register(request):
             messages.error(request, err)
         return redirect('/')
     request.session['user_id'] = result.id
-    messages.success(request, "Successfully registered!")
-    return render(request, 'login/travels.html')
+    messages.success(request, "Successfully registered!, now you can log in!")
+    return redirect('/')
 
 def login(request):
     result = User.objects.validate_login(request.POST)
@@ -29,59 +29,78 @@ def login(request):
     request.session['user_id'] = result.id
     messages.success(request, "Successfully logged in!")
 
-    return redirect('/travels')
+    return redirect('/quotes')
 
-def travels(request):
-    # print request.session['user_id']
+def quotes(request):
+    print request.session['user_id']
+    print User.objects.get(id=request.session['user_id']).likes.all()
     context={
         'user':User.objects.get(id=request.session['user_id']),
-        'trips': User.objects.get(id=request.session['user_id']).booking.all(),
-        'all_trips': Trip.objects.exclude(id=request.session['user_id'])
+        'quotes_left':Quote.objects.exclude(id__in=User.objects.get(id=request.session['user_id']).likes.all()),
+        'quotes_right':User.objects.get(id=request.session['user_id']).likes.all(),
     }
-    return render(request, 'login/travels.html', context)
+    return render(request, 'login/quotes.html', context)
+
+def remove(request, fav_id ):
+
+    User.objects.get(id=request.session['user_id']).likes.remove(Quote.objects.get(id=fav_id))
+
+    return redirect('/quotes')
 
 def add(request):
-    return render(request, 'login/add.html')
+    print request.session['user_id']
+    print request.POST['quoted_by']
+    print 'mesg length', len(request.POST['message'])
 
-def add_trip(request):
-    print 'add_trip'
-    print len(request.POST['destination'])
-    if len(request.POST['destination'])<1:
-        messages.error(request, "Type a destination")
-        return redirect('/adding')
+    if len(request.POST['quoted_by']) <3 or len(request.POST['message'])<10:
+        messages.error(request, 'Name must be 3 char, Quote must be 10 char min.')
+        return redirect('/quotes')
     else:
-        Trip.objects.create(
-            destination = request.POST['destination'],
-            description = request.POST['description'],
-            start_at = request.POST['start'],
-            end_at = request.POST['end'],
-            added_by = User.objects.get(id=request.session['user_id']),
-        )
-
-        Trip.objects.get(destination=request.POST['destination']).Booked_by.add(User.objects.get(id=request.session['user_id']))
+        Quote.objects.create(message=request.POST['message'], quoted_by=request.POST['quoted_by'], added_by_id=request.session['user_id'])
 
 
 
-    return redirect('/travels')
+    return redirect('/quotes')
 
+def add_favorite(request, fav_id):
+    print fav_id
+    print request.session['user_id']
 
-def join(request, trip_id):
+    User.objects.get(id=request.session['user_id']).likes.add(Quote.objects.get(id=fav_id))
 
-    Trip.objects.get(id=trip_id).Booked_by.add(User.objects.get(id=request.session['user_id']))
+    return redirect('/quotes')
 
-    return redirect('/travels')
-
-def destination(request, trip_id):
-    creater_id=Trip.objects.get(id=trip_id).added_by_id
-    print creater_id
-    print Trip.objects.get(id=trip_id).Booked_by.exclude(id=User.objects.get(id=creater_id).id)
-
+def user(request, user_id):
+    print user_id   
 
     context={
-        'trip': Trip.objects.get(id=trip_id),
-        'users': Trip.objects.get(id=trip_id).Booked_by.exclude(id=User.objects.get(id=creater_id).id).all()
+        'user':User.objects.get(id= user_id),
+        'user_quotes': Quote.objects.filter(added_by= user_id),
+        'count': Quote.objects.filter(added_by= user_id).count()
+
     }
-    return render(request, 'login/destination.html', context)
+
+
+    return render(request,'login/user.html', context)
+
+
+# def join(request, trip_id):
+
+#     Trip.objects.get(id=trip_id).Booked_by.add(User.objects.get(id=request.session['user_id']))
+
+#     return redirect('/travels')
+
+# def destination(request, trip_id):
+#     creater_id=Trip.objects.get(id=trip_id).added_by_id
+#     print creater_id
+#     print Trip.objects.get(id=trip_id).Booked_by.exclude(id=User.objects.get(id=creater_id).id)
+
+
+#     context={
+#         'trip': Trip.objects.get(id=trip_id),
+#         'users': Trip.objects.get(id=trip_id).Booked_by.exclude(id=User.objects.get(id=creater_id).id).all()
+#     }
+#     return render(request, 'login/destination.html', context)
 
 def logout(request):
     request.session.flush()

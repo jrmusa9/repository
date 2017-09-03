@@ -71,14 +71,9 @@ class User(models.Model):
         return self.email
 
 
-class Trip(models.Model):
-    destination = models.CharField(max_length=100)
-    description = models.TextField(max_length=100)
-    start_at = models.DateTimeField(auto_now_add=False)
-    end_at = models.DateTimeField(auto_now=False)
+class Quote(models.Model):
+    quoted_by = models.CharField(max_length=100)
+    message = models.CharField(max_length=100)
     added_by = models.ForeignKey(User, related_name = 'adding')
-    Booked_by = models.ManyToManyField(User, related_name= 'booking')
-    
-
-    
+    liked_by = models.ManyToManyField(User, related_name= 'likes')
     

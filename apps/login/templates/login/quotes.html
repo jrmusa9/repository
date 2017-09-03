@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <title></title>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+
+        <style>
+            #left, #right{
+                display: inline-block;
+                width: 500px;
+                overflow:auto;
+                height:500px; 
+                padding: 20px;
+                border: 2px solid black;
+                vertical-align: top;
+            }
+            .quotes
+            {
+                display: block;
+                float:left;
+                height: 180px;
+                width:300px; 
+                padding:3px; 
+                border: 1px solid black;
+            }
+            .Content
+            {
+                height:100px;
+                overflow:auto;
+            }
+            #add_quote
+            {
+                border: 1px solid black;
+                width: 300px;
+            }
+        </style>
+    </head>
+    <body>
+        <h1>Welcome {{user.first_name}} {{user.last_name}}!</h1>
+        <div id="left">
+            <h2>Quotable quotes:</h2>
+            {% for quote in quotes_left %}
+            <div class="quotes">
+                <div class="Content">
+                    <p>{{quote.quoted_by}}:</p>
+                    <p>{{quote.message}}</p>
+                </div>
+                <p>Posted by <a href="/user/{{quote.added_by.id}}">{{quote.added_by.first_name}} {{quote.added_by.last_name}}</a></p>
+                <a href="/add_favorite/{{quote.id}}"><input type='button' value='Add to My List'></a>
+            </div>
+            {% endfor %}
+        </div>
+        <div id="right">
+            <h2>Your Favorite quotes of all time!:</h2>
+            {% for quote in quotes_right %}
+            <div class="quotes">
+                <div class="Content">
+                    <p>{{quote.quoted_by}}:</p>
+                    <p>{{quote.message}}</p>
+                </div>
+                <p>Posted by <a href="/user/{{quote.added_by.id}}">{{quote.added_by.first_name}} {{quote.added_by.last_name}}</a></p>
+                <a href="/remove/{{quote.id}}"><input type='button' value='Remove from My List'></a>
+            </div>
+            {% endfor %}
+        </div>
+        <div id="add_quote">
+            <h3>Contribute a quote"</h3>
+            {% for message in messages %}
+            <p>{{message}}</p>
+            {% endfor %}
+            <form action="/add" method="post"> {% csrf_token %}
+                Quoted by:<input type="text" name="quoted_by">
+                <textarea name="message" id="" cols="40" rows="5"></textarea>
+                <input type="submit" value="Submit">
+            </form>
+        </div>
+        <p><a href="/logout">Log out</a></p>
+    </body>
+</html>
